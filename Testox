@@ -134,6 +134,31 @@ local themes = {
         chatAIStroke = Color3.fromRGB(25, 55, 65),
         fluid1 = Color3.fromRGB(50, 150, 255),
         fluid2 = Color3.fromRGB(40, 200, 255),
+    },
+    Gold = {
+        bg = Color3.fromRGB(15, 15, 15),
+        card = Color3.fromRGB(22, 22, 22),
+        accent = Color3.fromRGB(255, 215, 0),
+        accent_h = Color3.fromRGB(255, 225, 50),
+        accent_p = Color3.fromRGB(218, 165, 32),
+        accent2 = Color3.fromRGB(230, 230, 230),
+        accent2_h = Color3.fromRGB(255, 255, 255),
+        accent2_p = Color3.fromRGB(200, 200, 200),
+        text = Color3.fromRGB(245, 245, 245),
+        dim = Color3.fromRGB(150, 150, 150),
+        input = Color3.fromRGB(30, 30, 30),
+        border = Color3.fromRGB(45, 45, 45),
+        hover = Color3.fromRGB(35, 35, 35),
+        press = Color3.fromRGB(40, 40, 40),
+        code = Color3.fromRGB(20, 20, 20),
+        red = Color3.fromRGB(250, 80, 80),
+        green = Color3.fromRGB(80, 220, 130),
+        chatUser = Color3.fromRGB(40, 35, 10),
+        chatUserStroke = Color3.fromRGB(80, 70, 20),
+        chatAI = Color3.fromRGB(25, 25, 25),
+        chatAIStroke = Color3.fromRGB(50, 50, 50),
+        fluid1 = Color3.fromRGB(255, 215, 0),
+        fluid2 = Color3.fromRGB(218, 165, 32),
     }
 }
 
@@ -206,10 +231,29 @@ local function addFocusRing(box)
 end
 
 -- ===========================
--- SESSION & SETTINGS STORAGE
+-- GLOBAL STATE & STORAGE
 -- ===========================
 local SESSION_FOLDER = "CoStudio_Sessions"
 pcall(function() if makefolder and not isfile(SESSION_FOLDER) then makefolder(SESSION_FOLDER) end end)
+
+local globalState = {hasSeenIntro = false, hasSeenAIAgreement = false}
+
+local function loadGlobalState()
+    pcall(function()
+        if isfile and isfile(SESSION_FOLDER .. "/global.json") then
+            local data = HttpService:JSONDecode(readfile(SESSION_FOLDER .. "/global.json"))
+            if data.hasSeenIntro ~= nil then globalState.hasSeenIntro = data.hasSeenIntro end
+            if data.hasSeenAIAgreement ~= nil then globalState.hasSeenAIAgreement = data.hasSeenAIAgreement end
+        end
+    end)
+end
+
+local function saveGlobalState()
+    pcall(function()
+        if writefile then writefile(SESSION_FOLDER .. "/global.json", HttpService:JSONEncode(globalState)) end
+    end)
+end
+loadGlobalState()
 
 local loadedSessions = {}
 local currentSessionId = nil
@@ -228,9 +272,7 @@ loadSettings()
 
 local function saveSettings()
     pcall(function()
-        if writefile then
-            writefile(SESSION_FOLDER .. "/settings.json", HttpService:JSONEncode({theme=activeTheme, scale=targetUIScale}))
-        end
+        if writefile then writefile(SESSION_FOLDER .. "/settings.json", HttpService:JSONEncode({theme=activeTheme, scale=targetUIScale})) end
     end)
 end
 
@@ -240,7 +282,7 @@ local function loadSessionsFromDisk()
         if listfiles then
             local files = listfiles(SESSION_FOLDER)
             for _, f in ipairs(files) do
-                if f:match("%.json$") and not f:match("settings%.json$") then
+                if f:match("%.json$") and not f:match("settings%.json$") and not f:match("global%.json$") then
                     local content = readfile(f)
                     if content then
                         local data = HttpService:JSONDecode(content)
@@ -351,7 +393,7 @@ CloseBtn.MouseButton1Click:Connect(toggleMain)
 CloseBtn.MouseEnter:Connect(function() tween(CloseBtn, {TextColor3=C.red}, 0.15) end)
 CloseBtn.MouseLeave:Connect(function() tween(CloseBtn, {TextColor3=C.dim}, 0.15) end)
 
-local SettingsBtn = create("ImageButton", {Image="rbxassetid://72289477093608", Size=UDim2.new(0,22,0,22), Position=UDim2.new(1,-76,0,9), BackgroundTransparency=1, Parent=TitleBar, Theme={ImageColor3="dim"}})
+local SettingsBtn = create("ImageButton", {Image="rbxassetid://7733964719", Size=UDim2.new(0,22,0,22), Position=UDim2.new(1,-76,0,9), BackgroundTransparency=1, Parent=TitleBar, Theme={ImageColor3="dim"}})
 SettingsBtn.MouseEnter:Connect(function() tween(SettingsBtn, {ImageColor3=C.text}, 0.15) end)
 SettingsBtn.MouseLeave:Connect(function() tween(SettingsBtn, {ImageColor3=C.dim}, 0.15) end)
 
@@ -468,9 +510,9 @@ end
 create("TextLabel", {Text="Theme", Font=Enum.Font.GothamBold, TextSize=14, Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,25,0,160), TextXAlignment=Enum.TextXAlignment.Left, BackgroundTransparency=1, Parent=SettingsOverlay, Theme={TextColor3="text"}})
 
 local themeBtns = {}
-local tList = {"Blurple", "Lite2"}
+local tList = {"Blurple", "Lite2", "Gold"}
 for i, t in ipairs(tList) do
-    local b = create("TextButton", {Text=t, Font=Enum.Font.GothamSemibold, TextSize=13, Size=UDim2.new(0,130,0,38), Position=UDim2.new(0, 25 + (i-1)*140, 0, 190), BorderSizePixel=0, Parent=SettingsOverlay})
+    local b = create("TextButton", {Text=t, Font=Enum.Font.GothamSemibold, TextSize=13, Size=UDim2.new(0,110,0,38), Position=UDim2.new(0, 25 + (i-1)*120, 0, 190), BorderSizePixel=0, Parent=SettingsOverlay})
     create("UICorner", {CornerRadius=UDim.new(0,8), Parent=b})
     table.insert(themeBtns, {btn = b, theme = t})
     b.MouseButton1Click:Connect(function()
@@ -948,7 +990,6 @@ local function getServiceSafe(serviceName)
 end
 
 local function addMessage(text, isUser, skipAnim)
-    -- Frame with dynamic UIScale perfectly fixes the blur
     local bubble = create("Frame",{
         Size=UDim2.new(0.98,0,0,0),AutomaticSize=Enum.AutomaticSize.Y,
         BorderSizePixel=0,Parent=ChatScroll,
@@ -1241,6 +1282,38 @@ local function hideThinking()
     end
 end
 
+-- ===========================
+-- AI AGREEMENT POPUP
+-- ===========================
+local aiAgreementOverlay = create("Frame", {Size=UDim2.new(1,0,1,0), ZIndex=50, BackgroundTransparency=0.3, BackgroundColor3=Color3.new(0,0,0), Parent=AIPage})
+local aiAgBox = create("Frame", {Size=UDim2.new(0,320,0,180), Position=UDim2.new(0.5,0,0.5,0), AnchorPoint=Vector2.new(0.5,0.5), BorderSizePixel=0, Parent=aiAgreementOverlay, Theme={BackgroundColor3="card"}})
+create("UICorner", {CornerRadius=UDim.new(0,12), Parent=aiAgBox})
+create("UIStroke", {Thickness=1, Parent=aiAgBox, Theme={Color="border"}})
+local aiAgScale = create("UIScale", {Scale=0, Parent=aiAgBox})
+
+local aiAgTitle = create("TextLabel", {Text="Notice", Font=Enum.Font.GothamBold, TextSize=18, Size=UDim2.new(1,0,0,40), Position=UDim2.new(0,0,0,10), BackgroundTransparency=1, Parent=aiAgBox, Theme={TextColor3="accent"}})
+local aiAgText = create("TextLabel", {Text="CoStudio might make mistakes, please confirm before checking & CoStudio may be buggy so using it to insert scripts might be unstable for now.", Font=Enum.Font.Gotham, TextSize=13, Size=UDim2.new(1,-40,0,70), Position=UDim2.new(0,20,0,50), TextWrapped=true, BackgroundTransparency=1, Parent=aiAgBox, Theme={TextColor3="text"}})
+
+local aiAgBtn = create("TextButton", {Text="Confirm", Font=Enum.Font.GothamBold, TextSize=14, TextColor3=Color3.new(1,1,1), Size=UDim2.new(0,120,0,36), Position=UDim2.new(0.5,-60,1,-50), BorderSizePixel=0, Parent=aiAgBox})
+create("UICorner", {CornerRadius=UDim.new(0,8), Parent=aiAgBtn})
+makeInteractiveBtn(aiAgBtn, "accent", "accent_h", "accent_p")
+
+if globalState.hasSeenAIAgreement then
+    aiAgreementOverlay.Visible = false
+else
+    tween(aiAgScale, {Scale=1}, 0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+end
+
+aiAgBtn.MouseButton1Click:Connect(function()
+    globalState.hasSeenAIAgreement = true
+    saveGlobalState()
+    local tw = tween(aiAgScale, {Scale=0}, 0.3, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+    tween(aiAgreementOverlay, {BackgroundTransparency=1}, 0.3)
+    tw.Completed:Wait()
+    aiAgreementOverlay.Visible = false
+end)
+
+
 local aiLock=false
 local function sendToCoStudio(msg)
     if aiLock or not msg or msg=="" then return end
@@ -1278,6 +1351,10 @@ local function sendToCoStudio(msg)
     .."Always say WHERE to place the script before each code block.\n"
     .."You can read workspace structure to understand the game. Analyze errors and debug code.\n"
     .."Keep responses helpful and concise. Running in Roblox Studio Lite (PlaceId: 10959918411).\n\n"
+    .."You have SPECIAL POWERS to control the UI if the user asks you to. You can change the Theme or the UI Scale by exactly outputting these tags anywhere in your response:\n"
+    .."- [UI:THEME:Blurple], [UI:THEME:Lite2], or [UI:THEME:Gold]\n"
+    .."- [UI:SCALE:Small], [UI:SCALE:Medium], or [UI:SCALE:Large]\n"
+    .."Example: If the user says 'make the UI bigger', you say 'Sure! [UI:SCALE:Large]'\n\n"
     .."Session:\n"..getGameContext()
 
     local messages={{role="system",content=systemPrompt}}
@@ -1360,6 +1437,33 @@ local function sendToCoStudio(msg)
         if parsed.choices and parsed.choices[1] and parsed.choices[1].message then
             local reply=parsed.choices[1].message.content
             if reply and reply~="" then
+                
+                -- AI UI Control Processing
+                local newTheme = reply:match("%[UI:THEME:([%w]+)%]")
+                local newScale = reply:match("%[UI:SCALE:([%w]+)%]")
+                
+                if newTheme and themes[newTheme] then
+                    applyTheme(newTheme)
+                    saveSettings()
+                    updateSettingsUI()
+                    reply = reply:gsub("%[UI:THEME:%w+%]", "*(Changed theme to " .. newTheme .. ")*")
+                end
+                
+                if newScale then
+                    local sVal = nil
+                    if newScale == "Small" then sVal = 0.85 
+                    elseif newScale == "Medium" then sVal = 1.0 
+                    elseif newScale == "Large" then sVal = 1.15 end
+                    
+                    if sVal then
+                        targetUIScale = sVal
+                        tween(MainScale, {Scale=targetUIScale}, 0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+                        saveSettings()
+                        updateSettingsUI()
+                        reply = reply:gsub("%[UI:SCALE:%w+%]", "*(Changed UI scale to " .. newScale .. ")*")
+                    end
+                end
+                
                 table.insert(chatHistory,{role="assistant",content=reply})
                 addMessage(reply,false)
                 
@@ -1421,6 +1525,59 @@ for i,c in ipairs(credits) do
 end
 
 --------------------------
+-- FIRST TIME INTRO ANIM
+--------------------------
+local IntroOverlay = create("Frame", {Size=UDim2.new(1,0,1,0), ZIndex=100, Parent=MainFrame, Theme={BackgroundColor3="bg"}})
+create("UICorner",{CornerRadius=UDim.new(0,16),Parent=IntroOverlay})
+local iTitle = create("TextLabel", {Text="Lite Tools", Font=Enum.Font.GothamBold, TextSize=36, Size=UDim2.new(1,0,0,40), Position=UDim2.new(0,0,0.5,-30), TextTransparency=1, BackgroundTransparency=1, Parent=IntroOverlay, Theme={TextColor3="accent"}})
+local iTitleScale = create("UIScale", {Scale=0.5, Parent=iTitle})
+local iSub = create("TextLabel", {Text="v"..u1, Font=Enum.Font.Gotham, TextSize=14, Size=UDim2.new(1,0,0,20), Position=UDim2.new(0,0,0.5,10), TextTransparency=1, BackgroundTransparency=1, Parent=IntroOverlay, Theme={TextColor3="dim"}})
+local iLoadBarBg = create("Frame", {Size=UDim2.new(0,240,0,4), Position=UDim2.new(0.5,-120,0.5,45), BackgroundTransparency=1, BorderSizePixel=0, Parent=IntroOverlay, Theme={BackgroundColor3="input"}})
+local iLoadBar = create("Frame", {Size=UDim2.new(0,0,1,0), BackgroundTransparency=1, BorderSizePixel=0, Parent=iLoadBarBg, Theme={BackgroundColor3="accent"}})
+create("UICorner",{CornerRadius=UDim.new(1,0),Parent=iLoadBarBg})
+create("UICorner",{CornerRadius=UDim.new(1,0),Parent=iLoadBar})
+local iSkip = create("TextButton", {Text="Skip", Font=Enum.Font.GothamSemibold, TextSize=12, Size=UDim2.new(0,50,0,30), Position=UDim2.new(1,-60,1,-40), TextTransparency=1, BackgroundTransparency=1, BorderSizePixel=0, Parent=IntroOverlay, Theme={TextColor3="dim"}})
+
+local function playIntro()
+    if globalState.hasSeenIntro then
+        IntroOverlay.Visible = false
+        return
+    end
+    
+    tween(iTitle, {TextTransparency=0}, 0.6)
+    tween(iTitleScale, {Scale=1}, 0.8, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
+    tween(iSkip, {TextTransparency=0}, 0.6)
+    task.wait(0.6)
+    
+    tween(iSub, {TextTransparency=0}, 0.5)
+    tween(iLoadBarBg, {BackgroundTransparency=0}, 0.5)
+    tween(iLoadBar, {BackgroundTransparency=0}, 0.5)
+    task.wait(0.4)
+    
+    tween(iLoadBar, {Size=UDim2.new(1,0,1,0)}, 1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+    task.wait(1.4)
+    
+    local fadeTime = 0.5
+    tween(IntroOverlay, {BackgroundTransparency=1}, fadeTime)
+    tween(iTitle, {TextTransparency=1}, fadeTime)
+    tween(iSub, {TextTransparency=1}, fadeTime)
+    tween(iLoadBarBg, {BackgroundTransparency=1}, fadeTime)
+    tween(iLoadBar, {BackgroundTransparency=1}, fadeTime)
+    tween(iSkip, {TextTransparency=1}, fadeTime)
+    
+    task.wait(fadeTime)
+    IntroOverlay.Visible = false
+    globalState.hasSeenIntro = true
+    saveGlobalState()
+end
+
+iSkip.MouseButton1Click:Connect(function()
+    IntroOverlay.Visible = false
+    globalState.hasSeenIntro = true
+    saveGlobalState()
+end)
+
+--------------------------
 -- BOOT & TOGGLE
 --------------------------
 for _,btn in pairs(tabBtns) do
@@ -1429,6 +1586,8 @@ for _,btn in pairs(tabBtns) do
 end
 task.defer(function() switchTab("Inserter") end)
 applyTheme(activeTheme)
+
+task.spawn(playIntro)
 
 pcall(function()
     local v57=_LocalPlayer.PlayerGui.StudioGui.MainBar.toolbox:Clone()
